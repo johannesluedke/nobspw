@@ -2,6 +2,7 @@ module NOBSPW
   module ValidationMethods
     DEFAULT_VALIDATION_METHODS = %i(password_empty?
                                     name_included_in_password?
+                                    username_included_in_password?
                                     email_included_in_password?
                                     domain_included_in_password?
                                     password_too_short?
@@ -24,6 +25,12 @@ module NOBSPW
       words_included_in_password?(words)
     end
 
+    def username_included_in_password?
+      return nil unless @username
+      words = remove_word_separators(@username).split(' ')
+      words_included_in_password?(words)
+    end
+
     def email_included_in_password?
       return nil unless @email
       words = remove_word_separators(email_without_extension(@email)).split(' ')
@@ -40,7 +47,16 @@ module NOBSPW
 
     def password_not_allowed?
       return nil unless NOBSPW.configuration.blacklist
-      NOBSPW.configuration.blacklist.include?(@password)
+
+      NOBSPW.configuration.blacklist.each do |expression|
+        if expression.is_a?(Regexp)
+          return true if @password.match?(expression)
+        else
+          return true if expression.to_s == @password
+        end
+      end
+
+      false
     end
 
     def password_too_short?

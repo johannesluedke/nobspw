@@ -1,3 +1,5 @@
+require 'shellwords'
+
 module NOBSPW
   class PasswordChecker
     include NOBSPW::ValidationMethods
@@ -26,7 +28,6 @@ module NOBSPW
 
     def check_password
       @weak_password_reasons = []
-
       NOBSPW.configuration.validation_methods.each do |method|
         if send("#{method}")
           @weak_password_reasons << method.to_s.sub(/\?$/, '').to_sym
@@ -38,7 +39,8 @@ module NOBSPW
     end
 
     def grep_command(path)
-      "#{NOBSPW.configuration.grep_path} '^#{@password}$' #{path}"
+      escaped_pw = Shellwords.escape(@password)
+      "#{NOBSPW.configuration.grep_path} '^#{escaped_pw}$' #{path}"
     end
   end
 end

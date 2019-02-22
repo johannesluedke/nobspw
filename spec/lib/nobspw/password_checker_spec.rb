@@ -67,6 +67,16 @@ RSpec.describe NOBSPW::PasswordChecker do
       end
     end
 
+    context 'username is included in password' do
+      let(:password) { 'iamjohnthegreat' }
+      let(:username) { 'johnthegreat'}
+
+      it 'fails as it should' do
+        expect(pc).to be_weak
+        expect(pc.reasons).to include(:username_included_in_password)
+      end
+    end
+
     context 'email username is included in password' do
       let(:password) { 'iamjohnthegreat' }
       let(:email)    { 'john.draper@microsoft.com'}
@@ -141,15 +151,26 @@ RSpec.describe NOBSPW::PasswordChecker do
     context 'password is blacklisted' do
       before(:each) do
         NOBSPW.configure do |config|
-          config.blacklist = %w(thispasswordisblacklisted)
+          config.blacklist = ['thispasswordisblacklisted', /middle/i]
         end
       end
 
-      let(:password) { 'thispasswordisblacklisted' }
+      context 'match against string' do
+        let(:password) { 'thispasswordisblacklisted' }
 
-      it 'fails as it should' do
-        expect(pc).to be_weak
-        expect(pc.reasons).to include(:password_not_allowed)
+        it 'fails as it should' do
+          expect(pc).to be_weak
+          expect(pc.reasons).to include(:password_not_allowed)
+        end
+      end
+
+      context 'match against regex' do
+        let(:password) { 'SomewhereInTheMiddleOfMyPassword' }
+
+        it 'fails as it should' do
+          expect(pc).to be_weak
+          expect(pc.reasons).to include(:password_not_allowed)
+        end
       end
     end
 
@@ -159,6 +180,15 @@ RSpec.describe NOBSPW::PasswordChecker do
       it 'fails as it should' do
         expect(pc).to be_weak
         expect(pc.reasons).to include(:password_too_common)
+      end
+    end
+
+    context 'password contains strong password with illegal shell characters' do
+      let(:password) { '^password123\./$%!@#!^^$$'}
+
+      it 'is reported as strong' do
+        expect(pc).to be_strong
+        expect(pc.reasons).to be_empty
       end
     end
 

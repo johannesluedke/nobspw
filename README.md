@@ -61,7 +61,7 @@ Optionally, you can configure some options:
     config.dictionary_path = 'path/to/dictionary.txt'
     config.grep_path = '/usr/bin/grep'
     config.domain_name = 'mywebsitedomain.com' # it is recommended you configure this
-    config.blacklist = ['this_password_is_not_allowed']
+    config.blacklist = ['this_password_is_not_allowed', /password/]
   end
 ```
 
@@ -70,7 +70,7 @@ Optionally, you can configure some options:
 I included `PasswordValidator` for Rails. Validating passwords in your model couldn't be easier:
 
 ```ruby
-validates :password, presence: true, password: true, if: -> { new_record? || changes[:password] }
+validates :password, presence: true, password: true, if: -> { new_record? || changes[:password] || changes[:password_digest] }
 ```
 
 PasswordValidator will try to guess the correct field name for each `PasswordChecker` argument as follow:
@@ -84,7 +84,7 @@ If you have field names different than above, you can tell `PasswordValidator` w
 ```ruby
 validates :password, password: { :name => :customer_name,
                                  :email => :electronic_address },
-          if: -> { new_record? || changes[:password] }
+          if: -> { new_record? || changes[:password] || changes[:password_digest] }
 ```
 
 ## Validations
